@@ -681,7 +681,7 @@ my_title = 'Pacific Meridional Overturning Stream Function (Sv)'
 # CONTROL - PACIFIC OVERTURNING
 psi_vars_ctrl = [UVic_psi_Pac_ctrl.isel(time=0), LC_SFpac.isel(time=0), GENIE_SFpac_ctrl, LCLGM_SFpac_ctrl]
 # VENTILATED - PACIFIC OVERTURNING
-psi_vars_vent = [UVic_psi_Pac.isel(time=-1), LC_SFpac.isel(time=-1), GENIE_SFpac_exp, LCLGM_SFpac]
+psi_vars_vent = [UVic_psi_Pac.isel(time=-1), LC_SFpac.isel(time=5), GENIE_SFpac_exp, LCLGM_SFpac]
 
 # LIST OF 8
 psi_vars = psi_vars_ctrl + psi_vars_vent
@@ -822,7 +822,7 @@ my_title = 'Atlantic Meridional Overturning Stream Function (Sv)'
 # CONTROL - Atlantic OVERTURNING
 psi_vars_ctrl = [UVic_psi_Atl_ctrl.isel(time=0), LC_SFatl.isel(time=0), GENIE_SFatl_ctrl, LCLGM_SFatl_ctrl]
 # VENTILATED - PACIFIC OVERTURNING
-psi_vars_vent = [UVic_psi_Atl.isel(time=-1), LC_SFatl.isel(time=-1), GENIE_SFatl_exp, LCLGM_SFatl]
+psi_vars_vent = [UVic_psi_Atl.isel(time=-1), LC_SFatl.isel(time=5), GENIE_SFatl_exp, LCLGM_SFatl]
 
 # LIST OF 8
 psi_vars = psi_vars_ctrl + psi_vars_vent
@@ -964,14 +964,14 @@ print(f'Anom (vent-ctrl) = {(maxSF_UV_vent_Atl-maxSF_UV_ctrl_Atl):.3f}')
 print('\n\n\nLOVECLIM')
 
 maxSF_LC_ctrl_Pac = LC_SFpac.isel(time=0).sel(lat=slice(lat_above, 91)).max().values
-maxSF_LC_vent_Pac = LC_SFpac.isel(time=-1).sel(lat=slice(lat_above, 91)).max().values
+maxSF_LC_vent_Pac = LC_SFpac.isel(time=5).sel(lat=slice(lat_above, 91)).max().values
 print('\nPacific:')
 print(f'LC ctrl = {maxSF_LC_ctrl_Pac:.3f} Sv')
 print(f'LC Vent = {maxSF_LC_vent_Pac:.3f} Sv')
 print(f'Anom (vent-ctrl) = {(maxSF_LC_vent_Pac-maxSF_LC_ctrl_Pac):.3f}')
 
 maxSF_LC_ctrl_Atl = LC_SFatl.isel(time=0).sel(lat=slice(lat_above, 91)).max().values
-maxSF_LC_vent_Atl = LC_SFatl.isel(time=-1).sel(lat=slice(lat_above, 91)).max().values
+maxSF_LC_vent_Atl = LC_SFatl.isel(time=5).sel(lat=slice(lat_above, 91)).max().values
 print('\nAtlantic:')
 print(f'LC ctrl = {maxSF_LC_ctrl_Atl:.3f} Sv')
 print(f'LC Vent = {maxSF_LC_vent_Atl:.3f} Sv')

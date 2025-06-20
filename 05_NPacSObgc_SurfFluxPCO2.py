@@ -32,16 +32,49 @@ xr.set_options(keep_attrs=True)
 # %% (1) Read in output 
 
 
-# %% Load in UVic flux, PCO2, DIC, Alk output
+# Load in PCO2, DIC, Alk output
 
 pathname = '../results/';
-flux_ctrl = xr.open_dataset(pathname+'UV_ctrl_flux.nc', decode_times=False)['flux']
-flux_pmoc = xr.open_dataset(pathname+'UV_pmoc_flux.nc', decode_times=False)['flux']
-
-
 vars_ctrl = xr.open_dataset(pathname+'UV_ctrl.nc', decode_times=False)[['alk', 'dic', 'PCO2']]
 vars_pmoc = xr.open_dataset(pathname+'UV_pmoc.nc', decode_times=False)[['alk', 'dic', 'PCO2']]
 
+
+
+# Load in flux
+
+pathname = '../data/Output_2014_UVic_U-fwf_U-fNA/';
+filename = 'tavg.02001.01.01.nc'
+raw_flux_ctrl = xr.open_dataset(pathname+filename, decode_times=False)
+raw_flux_ctrl = raw_flux_ctrl.F_dic.isel(time=0)
+
+# Convert from upwards to downward carbon flux (*-1), and convert units from
+#  mol m-2 s-1 to mol m-2 yr-1
+flux_ctrl = raw_flux_ctrl*(-1*365*24*60*60)
+flux_ctrl.attrs['long_name'] = 'upwards carbon flux'
+flux_ctrl.attrs['units'] = 'mol m-2 yr-1'
+# Add note
+flux_ctrl.attrs['note'] = 'Ctrl'
+# Rename coordinates
+flux_ctrl = flux_ctrl.rename({'latitude':'lat', 'longitude':'lon'})
+
+
+
+pathname = '../data/Output_2014_UVic_U-fwf_U-fNA/';
+filename = 'tavg_tot.nc'
+raw_flux_pmoc = xr.open_dataset(pathname+filename, decode_times=False) 
+# time=10. array([100.5, 196., 296., 396., 496., 596., 696., 796., 896., 996.])
+# Take last timestep at the end of the 1000 years
+raw_flux_pmoc = raw_flux_pmoc.F_dic.isel(time=-1)
+
+# Convert from upwards to downward carbon flux (*-1), and convert units from
+#  mol m-2 s-1 to mol m-2 yr-1
+flux_pmoc = raw_flux_pmoc*(-1*365*24*60*60)
+flux_pmoc.attrs['long_name'] = 'upwards carbon flux'
+flux_pmoc.attrs['units'] = 'mol m-2 yr-1'
+# Add note
+flux_pmoc.attrs['note'] = 'Ctrl'
+# Rename coordinates
+flux_pmoc = flux_pmoc.rename({'latitude':'lat', 'longitude':'lon'})
 
 
 
@@ -288,7 +321,7 @@ for ii in np.arange(2):
         anom = pmoc - ctrl
         panel_title = 'Indian-Pacific Basin'
         panel_label = 'a'
-        panel_ylabel = r'upwards carbon flux [mol m$^{-2}$]'
+        panel_ylabel = r'upwards carbon flux [mol C yr$^{-1}$]'
         
     else:
         ctrl = int_glob_flux_ctrl
@@ -312,7 +345,7 @@ for ii in np.arange(2):
     ax.fill_between(anom.lat, 0, anom.where(anom<=0), color='k', alpha=0.2)  # alpha controls transparency
     
     # Adding labels and title
-    ax.set_ylim(-0.4e13, 1.18e13)    
+    ax.set_ylim(-0.75e13, 0.9e13)    
     ax.set_xlabel(r'Latitude [$\degree$N]')
     ax.set_ylabel(panel_ylabel)
     ax.set_title(panel_title, fontweight='bold')
@@ -338,101 +371,4 @@ plt.savefig('../results/SuppFig_ZonIntFlux_byLat.pdf', dpi=600, bbox_inches='tig
 plt.show()
 
 
-
-
-# %% - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# %% (4) Print out total glob/IndoPac surface integrals of flux and PCO2
-
-
-# %% GLOBAL surface integral
-
-# #  Cut off Arctic w/ 65 degN
-# n_lat = 65
-
-surfint_glob_flux_pmoc = (flux_pmoc*dxdy_model).sel(lat=slice(-90, n_lat)).sum()
-surfint_glob_flux_ctrl = (flux_ctrl*dxdy_model).sel(lat=slice(-90, n_lat)).sum()
-
-
-surfint_glob_PCO2_pmoc = vars_pmoc.PCO2.isel(depth=0).sel(lat=slice(-90, n_lat)).sum()
-surfint_glob_PCO2_ctrl = vars_ctrl.PCO2.isel(depth=0).sel(lat=slice(-90, n_lat)).sum()
-
-
-
-print('\nGLOBAL surface integral, flux*da [mol s-1] and PCO2 [uatm]:')
-
-print('\nFlux*da [mol yr-1]')
-print('\nPMOC = '+str(surfint_glob_flux_pmoc.values))
-print('Ctrl = '+str(surfint_glob_flux_ctrl.values))
-anom_val = (surfint_glob_flux_pmoc-surfint_glob_flux_ctrl).values
-print('Anomaly (PMOC-Ctrl) = '+str(anom_val))
-print('Or, % of Ctrl val = '+str((anom_val/surfint_glob_flux_ctrl.values)*100)+' %')
-
-
-print('\nPCO2 [uatm]')
-print('\nPMOC = '+str(surfint_glob_PCO2_pmoc.values))
-print('Ctrl = '+str(surfint_glob_PCO2_ctrl.values))
-anom_val = (surfint_glob_PCO2_pmoc-surfint_glob_PCO2_ctrl).values
-print('Anomaly (PMOC-Ctrl) = '+str(anom_val))
-print('Or, % of Ctrl val = '+str((anom_val/surfint_glob_PCO2_ctrl.values)*100)+' %')
-
-
-
-# %% Pacific surface integral
-
-surfint_Pac_flux_pmoc = (flux_pmoc*dxdy_model*UVic_Pac_mask).sel(lat=slice(-90, n_lat)).sum()
-surfint_Pac_flux_ctrl = (flux_ctrl*dxdy_model*UVic_Pac_mask).sel(lat=slice(-90, n_lat)).sum()
-
-
-surfint_Pac_PCO2_pmoc = (vars_pmoc.PCO2*UVic_Pac_mask).isel(depth=0).sel(lat=slice(-90, n_lat)).sum()
-surfint_Pac_PCO2_ctrl = (vars_ctrl.PCO2*UVic_Pac_mask).isel(depth=0).sel(lat=slice(-90, n_lat)).sum()
-
-
-
-print('\n\nPACIFIC surface integral, flux*da [mol s-1] and PCO2 [uatm]:')
-
-print('\nFlux*da [mol yr-1]')
-print('\nPMOC = '+str(surfint_Pac_flux_pmoc.values))
-print('Ctrl = '+str(surfint_Pac_flux_ctrl.values))
-anom_val = (surfint_Pac_flux_pmoc-surfint_Pac_flux_ctrl).values
-print('Anomaly (PMOC-Ctrl) = '+str(anom_val))
-print('Or, % of Ctrl val = '+str((anom_val/surfint_Pac_flux_ctrl.values)*100)+' %')
-
-
-print('\nPCO2 [uatm]')
-print('\nPMOC = '+str(surfint_Pac_PCO2_pmoc.values))
-print('Ctrl = '+str(surfint_Pac_PCO2_ctrl.values))
-anom_val = (surfint_Pac_PCO2_pmoc-surfint_Pac_PCO2_ctrl).values
-print('Anomaly (PMOC-Ctrl) = '+str(anom_val))
-print('Or, % of Ctrl val = '+str((anom_val/surfint_Pac_PCO2_ctrl.values)*100)+' %')
-
-
-
-# %% IndoPacific surface integral
-
-surfint_IndoPac_flux_pmoc = (flux_pmoc*dxdy_model*UVic_IndoPac_mask).sel(lat=slice(-90, n_lat)).sum()
-surfint_IndoPac_flux_ctrl = (flux_ctrl*dxdy_model*UVic_IndoPac_mask).sel(lat=slice(-90, n_lat)).sum()
-
-
-surfint_IndoPac_PCO2_pmoc = (vars_pmoc.PCO2*UVic_IndoPac_mask).isel(depth=0).sel(lat=slice(-90, n_lat)).sum()
-surfint_IndoPac_PCO2_ctrl = (vars_ctrl.PCO2*UVic_IndoPac_mask).isel(depth=0).sel(lat=slice(-90, n_lat)).sum()
-
-
-
-print('\n\nINDO-PACIFIC surface integral, flux*da [mol s-1] and PCO2 [uatm]:')
-
-print('\nFlux*da [mol yr-1]')
-print('\nPMOC = '+str(surfint_IndoPac_flux_pmoc.values))
-print('Ctrl = '+str(surfint_IndoPac_flux_ctrl.values))
-anom_val = (surfint_IndoPac_flux_pmoc-surfint_IndoPac_flux_ctrl).values
-print('Anomaly (PMOC-Ctrl) = '+str(anom_val))
-print('Or, % of Ctrl val = '+str((anom_val/surfint_IndoPac_flux_ctrl.values)*100)+' %')
-
-
-print('\nPCO2 [uatm]')
-print('\nPMOC = '+str(surfint_IndoPac_PCO2_pmoc.values))
-print('Ctrl = '+str(surfint_IndoPac_PCO2_ctrl.values))
-anom_val = (surfint_IndoPac_PCO2_pmoc-surfint_IndoPac_PCO2_ctrl).values
-print('Anomaly (PMOC-Ctrl) = '+str(anom_val))
-print('Or, % of Ctrl val = '+str((anom_val/surfint_IndoPac_PCO2_ctrl.values)*100)+' %')
 

@@ -566,39 +566,6 @@ ctrl_sal = UV_ctrl.sal
 exp_sal  = UV_pmoc.sal
 
 
-# %% First load in model-output CO2 flux, for ref
-
-ctrl_fDIC = xr.open_dataset(pathname+'tavg.02001.01.01.nc', decode_times=False)['F_dic'].isel(time=0)
-exp_fDIC = xr.open_dataset(pathname+'tavg_tot.nc', decode_times=False)['F_dic'].isel(time=-1)
-# .F_dic    surface downward carbon flux [mol m-2 s-1]
-# (+) = C into sea
-anom_fDIC = exp_fDIC - ctrl_fDIC
-anom_fDIC_persec = anom_fDIC*-1
-anom_fDIC_persec = anom_fDIC_persec.assign_attrs(long_name='surface upwards carbon flux anomaly', note='(+) = into atmosphere')
-
-
-ctrl_fDIC_persec = ctrl_fDIC*-1
-exp_fDIC_persec  =  exp_fDIC*-1
-
-ctrl_fDIC_persec = ctrl_fDIC_persec.assign_attrs(long_name='surface upwards carbon flux', note='(+) = into atmosphere')
-exp_fDIC_persec = exp_fDIC_persec.assign_attrs(long_name='surface upwards carbon flux', note='(+) = into atmosphere')
-
-
-# Convert to yr-1, and *-1 to make Flux of C INTO atms
-# Note, var.time.atts.calendar = noleap (all years have same number of days). 
-# Can't find how many days in a year (360 or 365), but shouldn't make a difference
-#  to anomaly values
-ctrl_fDIC = ctrl_fDIC*-1*365*24*60*60
-exp_fDIC  = exp_fDIC*-1*365*24*60*60
-anom_fDIC = anom_fDIC*-1*365*24*60*60
-ctrl_fDIC = ctrl_fDIC.assign_attrs(units="mol m-2 yr-1", long_name='surface upwards carbon flux', note='(+) = into atmosphere')
-exp_fDIC  = exp_fDIC.assign_attrs(units="mol m-2 yr-1", long_name='surface upwards carbon flux', note='(+) = into atmosphere')
-anom_fDIC = anom_fDIC.assign_attrs(units="mol m-2 yr-1", long_name='surface upwards carbon flux anomaly', note='(+) = into atmosphere')
-
-# Rename coordinates
-ctrl_fDIC = ctrl_fDIC.rename({'longitude':'lon', 'latitude':'lat'})
-exp_fDIC  =  exp_fDIC.rename({'longitude':'lon', 'latitude':'lat'})
-anom_fDIC = anom_fDIC.rename({'longitude':'lon', 'latitude':'lat'})
 
 
 # %% (6a) Sort winds - apply wind anomaly output to wind climatology following UVic code's procedure
@@ -1150,9 +1117,6 @@ def plot_flux_anoms(data, title_str, my_vmin=None, my_vmax=None):
 
 vmin_forplot = -10/3; vmax_forplot = -1*vmin_forplot # mol m-2 yr-1
 
-# plot_flux_anoms(anom_fDIC, 'True Outgassing Anomaly (from Model Output)', vmin_forplot/3, vmax_forplot/3)
-plot_flux_anoms(anom_fDIC, 'True Outgassing Anomaly (from Model Output)', vmin_forplot, vmax_forplot)
-
 
 plot_flux_anoms(f_anom, 'Outgassing Anomaly (Exp-Ctrl)', vmin_forplot, vmax_forplot) # -6, 6 also works
 plot_flux_anoms(f_anom_dueToAllBGC, 'Outgassing Anomaly due to ALL Ocn BGC Change (T,S,Alk,DIC,PO4)', vmin_forplot, vmax_forplot)
@@ -1356,12 +1320,6 @@ plt.show()
 
 # %% - - - - - - -
 
-# %% Print max anoms in S.O., model output and this code's calc of CO2 flux
-print('Max CO2 outgassing anomaly in model output and by my \ncalc [mol m-2 yr-1] (30-90S, all lons):')
-print(np.nanmin(anom_fDIC.sel(lat=slice(-90, -40)).values))
-print(np.nanmin(f_anom.sel(lat=slice(-90, -40)).values))
-
-
 
 # %% Write func for surface area-wt'd averages
 
@@ -1440,7 +1398,7 @@ weights.attrs['long_name'] = 'weights'
 
 
 
-# %% Flux/Outgassing anoms - offline, my calc of flux (this code)
+# %% Print flux/Outgassing anoms
 
 # East-west cut_off of INDO-Pac basin [degE]:
 east_lon = 25; west_lon = 280
@@ -1450,45 +1408,4 @@ cutoff_lat = -40
 # Print out area-wt'd averages (careful, plain old f_ctrl and f_exp not converted to yr-1 yet)
 print_SO_areawtd_avgs('fDIC into atms', f_ctrl, f_exp, f_anom, weights, cutoff_lat, east_lon, west_lon)
 
-
-
-# %% ... and sum up to get Total outgassing rates [mol yr-1]
-
-# Global 
-
-f_ctrl_totmolperyr = f_ctrl*(365*24*60*60)*grid_areas_T
-f_exp_totmolperyr  = f_exp*(365*24*60*60)*grid_areas_T
-f_anom_totmolperyr = f_exp_totmolperyr - f_ctrl_totmolperyr
-
-f_ctrl_totmolperyr = f_ctrl_totmolperyr.assign_attrs(units="mol yr-1")
-f_exp_totmolperyr  = f_exp_totmolperyr.assign_attrs(units="mol yr-1")
-f_anom_totmolperyr = f_anom_totmolperyr.assign_attrs(units="mol yr-1")
-
-
-# Sum up over S.O. and print total mol yr-1
-lat_to_use = -40
-
-ctrl_val = f_ctrl_totmolperyr.sel(lat=slice(-90, lat_to_use)).sum().values
-exp_val  = f_exp_totmolperyr.sel(lat=slice(-90, lat_to_use)).sum().values
-anom_val = f_anom_totmolperyr.sel(lat=slice(-90, lat_to_use)).sum().values
-
-Pac_ctrl_val = f_ctrl_totmolperyr.sel(lat=slice(-90, lat_to_use), lon=slice(east_lon, west_lon)).sum().values
-Pac_exp_val  = f_exp_totmolperyr.sel(lat=slice(-90, lat_to_use), lon=slice(east_lon, west_lon)).sum().values
-Pac_anom_val = f_anom_totmolperyr.sel(lat=slice(-90, lat_to_use), lon=slice(east_lon, west_lon)).sum().values
-
-print('\n\n\nUVic total flux DIC into atms ['+f_anom_totmolperyr.units+']')
-
-print('South of '+str(-1*lat_to_use)+'S:')
-print(' CTRL  = {:.2E}'.format(ctrl_val))
-print(' EXP   = {:.2E}'.format(exp_val))
-print(' ANOM  = {:.2E}'.format(anom_val)+' (avg of anomaly field)')
-print(' ANOM val = '+'{:.1f}'.format(anom_val/ctrl_val*100)+' % of CTRL val')
-
-print('\nS.O. Pac sector ('+str(east_lon)+' degE - '+str(360-west_lon)+' degW):')
-print(' CTRL  = {:.2E}'.format(Pac_ctrl_val))
-print(' EXP   = {:.2E}'.format(Pac_exp_val))
-print(' ANOM  = {:.2E}'.format(Pac_anom_val)+' (avg of anomaly field)')
-print(' ANOM val = '+'{:.1f}'.format(Pac_anom_val/Pac_ctrl_val*100)+' % of CTRL val')
-
-# Tera = 10^12
 

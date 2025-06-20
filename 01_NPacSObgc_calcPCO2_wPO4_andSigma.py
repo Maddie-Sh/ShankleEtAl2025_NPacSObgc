@@ -3,6 +3,8 @@
 Created on Fri Sept 22 14:52:52 2023
 
 @author: mgs23
+
+2025-06-26
 """
 
 
@@ -210,24 +212,24 @@ dic_LC_ctrl = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['CT'].isel(T10=0
 alk_LC_ctrl = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['AT'].isel(T10=0)
 po4_LC_ctrl = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['PO4'].isel(T10=0)
 
-dic_LC_pmoc = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['CT'].sel(T10=2000.0)
-alk_LC_pmoc = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['AT'].sel(T10=2000.0)
-po4_LC_pmoc = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['PO4'].sel(T10=2000.0)
+dic_LC_pmoc = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['CT'].sel(T10=1000.0)
+alk_LC_pmoc = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['AT'].sel(T10=1000.0)
+po4_LC_pmoc = xr.open_dataset(pathname+'LOVECLIM-BGCnoComp.nc')['PO4'].sel(T10=1000.0)
 
 
 # temp
 # time = 2000 (annual resolution). Avg first and last 10 yrs of simulation for your control and experiment. Units: Kelvin, convert later
 potT_LC_ctrl = xr.open_dataset(pathname+'temp-19-172.nc')['temp'].isel(time=slice(0,10)).mean(dim='time')
-potT_LC_pmoc = xr.open_dataset(pathname+'temp-19-172.nc')['temp'].isel(time=slice(1990,2000)).mean(dim='time')
+potT_LC_pmoc = xr.open_dataset(pathname+'temp-19-172.nc')['temp'].isel(time=slice(990,1000)).mean(dim='time')
 
 # sal
 # time = 2000 (annual resolution). units: psu
 sal_LC_ctrl = xr.open_dataset(pathname+'sal-19-172.nc')['sal'].isel(time=slice(0,10)).mean(dim='time')
-sal_LC_pmoc = xr.open_dataset(pathname+'sal-19-172.nc')['sal'].isel(time=slice(1990,2000)).mean(dim='time')
+sal_LC_pmoc = xr.open_dataset(pathname+'sal-19-172.nc')['sal'].isel(time=slice(990,1000)).mean(dim='time')
 
 # time = 2000 (annual resolution). units: kg/m^3
 rho_LC_ctrl = xr.open_dataset(pathname+'rho-19-172.nc')['rho'].isel(time=slice(0,10)).mean(dim='time')
-rho_LC_pmoc = xr.open_dataset(pathname+'rho-19-172.nc')['rho'].isel(time=slice(1990,2000)).mean(dim='time')
+rho_LC_pmoc = xr.open_dataset(pathname+'rho-19-172.nc')['rho'].isel(time=slice(990,1000)).mean(dim='time')
 
 
 
@@ -1208,7 +1210,7 @@ plt.savefig('../results/Fig3_4panelPCO2sigma2.pdf', dpi=600, bbox_inches='tight'
 plt.show()
 
 
-# %% Make SuppFig2
+# %% Make SuppFig3
 
 lon_of_interest = 200
 
